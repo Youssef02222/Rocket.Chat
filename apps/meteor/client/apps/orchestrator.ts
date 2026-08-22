@@ -6,7 +6,7 @@ import type { Serialized } from '@rocket.chat/core-typings';
 
 import type { IAppExternalURL, ICategory } from './@types/IOrchestrator';
 import { RealAppsEngineUIHost } from './RealAppsEngineUIHost';
-import { sdk } from '../../app/utils/client/lib/SDKClient';
+import { sdk } from '../lib/SDKClient';
 import { hasAtLeastOnePermission } from '../lib/authorization';
 import { dispatchToastMessage } from '../lib/toast';
 import type { App } from '../views/marketplace/types';

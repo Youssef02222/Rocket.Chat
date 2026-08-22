@@ -3,7 +3,7 @@ import { Emitter } from '@rocket.chat/emitter';
 import { differenceInMilliseconds } from 'date-fns';
 import { useCallback, useSyncExternalStore } from 'react';
 
-import { getUserPreference } from '../../app/utils/client';
+import { getUserPreference } from './getUserPreference';
 import { Messages, Subscriptions } from '../stores';
 import { onClientMessageReceived } from './onClientMessageReceived';
 import { getUserId } from './user';
