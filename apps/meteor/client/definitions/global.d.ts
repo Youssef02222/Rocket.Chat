@@ -86,5 +86,7 @@ declare global {
 
 	interface NotificationEventMap {
 		reply: { response: string };
+		/** Fired by the desktop app when one of a notification's action buttons is pressed. */
+		action: { action: string };
 	}
 }
