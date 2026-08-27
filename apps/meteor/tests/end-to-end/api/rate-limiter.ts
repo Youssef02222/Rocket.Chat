@@ -1,3 +1,10 @@
+// TODO: this suite cannot run on CI. `TEST_MODE` makes `shouldAddRateLimitToRoute` skip rule
+// registration at boot, so no route is ever rate limited during a test run and there is no setting
+// that brings it back — `API_Enable_Rate_Limiter` and `_Dev` gate enforcement, not registration.
+// It therefore self-skips below, and only runs against a server started without `TEST_MODE`.
+// We still need to decide how to exercise it on CI: relax that guard, narrow it (by `TEST_MODE`
+// value or an opt-in), or expose a registration path meant for tests.
+
 import type { Credentials } from '@rocket.chat/api-client';
 import type { IUser } from '@rocket.chat/core-typings';
 import { expect } from 'chai';
@@ -10,6 +17,8 @@ import { createUser, deleteUser, login } from '../../data/users.helper';
 
 const PASSWORD = 'rate-limiter-spec';
 
+// Enforcement is off for the whole run: the suite calls endpoints far above their allowance, and
+// this is the only spec that wants the limiter awake.
 before(async () => {
 	await new Promise<void>((resolve, reject) => getCredentials((err?: Error) => (err ? reject(err) : resolve())));
 	await updateSetting('API_Enable_Rate_Limiter', false);
@@ -25,7 +34,7 @@ describe('[Rate Limiter]', () => {
 	let aliceCredentials: Credentials;
 	let bobCredentials: Credentials;
 
-	before(async () => {
+	before(async function () {
 		[alice, bob] = await Promise.all([
 			createUser({ password: PASSWORD } as Partial<IUser>),
 			createUser({ password: PASSWORD } as Partial<IUser>),
@@ -33,6 +42,11 @@ describe('[Rate Limiter]', () => {
 		[aliceCredentials, bobCredentials] = await Promise.all([login(alice.username, PASSWORD), login(bob.username, PASSWORD)]);
 
 		await updateSetting('API_Enable_Rate_Limiter', true);
+
+		const probe = await request.get(api('roles.list')).set(aliceCredentials);
+		if (!probe.headers['x-ratelimit-limit']) {
+			this.skip();
+		}
 	});
 
 	after(async () => {
@@ -40,6 +54,7 @@ describe('[Rate Limiter]', () => {
 		await Promise.all([deleteUser(alice), deleteUser(bob)]);
 	});
 
+	// Both users share the runner's address, which is what makes the two suites below differ.
 	describe('per user', () => {
 		const send = (who: Credentials, msg: string) =>
 			request
