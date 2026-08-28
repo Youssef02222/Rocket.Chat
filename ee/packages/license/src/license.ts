@@ -17,6 +17,7 @@ import { Emitter } from '@rocket.chat/emitter';
 
 import { getLicenseLimit } from './deprecated';
 import type { getAppsConfig, getMaxActiveUsers, getUnmodifiedLicenseAndModules } from './deprecated';
+import { buildDevUnlockLicense, isDevUnlockAllowed } from './devUnlock';
 import { DuplicatedLicenseError } from './errors/DuplicatedLicenseError';
 import { InvalidLicenseError } from './errors/InvalidLicenseError';
 import { NotReadyForValidation } from './errors/NotReadyForValidation';
@@ -130,6 +131,8 @@ export abstract class LicenseManager extends Emitter<LicenseEvents> {
 
 	protected _lockedLicense: string | undefined;
 
+	private _devUnlock = false;
+
 	private states = new Map<LicenseBehavior, Map<LicenseLimitKind, boolean>>();
 
 	public get shouldPreventActionResults() {
@@ -225,6 +228,7 @@ export abstract class LicenseManager extends Emitter<LicenseEvents> {
 		this._unmodifiedLicense = undefined;
 		this._valid = false;
 		this._lockedLicense = undefined;
+		this._devUnlock = false;
 
 		this.states.clear();
 		clearPendingLicense.call(this);
@@ -455,6 +459,54 @@ export abstract class LicenseManager extends Emitter<LicenseEvents> {
 
 	public hasOfflineLicense(): boolean {
 		return this.getLicense()?.information.offline ?? false;
+	}
+
+	public isDevUnlock(): boolean {
+		return this._devUnlock;
+	}
+
+	/**
+	 * Applies an in-memory offline license for local testing (no Cloud, no seat cap).
+	 * Ignored when NODE_ENV is production.
+	 */
+	public async applyDevUnlock(modules: LicenseModule[]): Promise<boolean> {
+		if (!isDevUnlockAllowed()) {
+			logger.error({ msg: 'RC_DEV_UNLOCK_MODULES is ignored in production' });
+			return false;
+		}
+
+		if (!modules.length) {
+			return false;
+		}
+
+		if (!isReadyForValidation.call(this)) {
+			logger.error({ msg: 'Dev unlock skipped: license manager is not ready for validation' });
+			return false;
+		}
+
+		const license = buildDevUnlockLicense(modules);
+
+		this.clearLicenseData();
+		this._unmodifiedLicense = license;
+		this._license = license;
+		this._devUnlock = true;
+
+		try {
+			await this.validateLicense({ isNewLicense: true, triggerSync: false });
+		} catch (err) {
+			this._devUnlock = false;
+			logger.error({ msg: 'Dev license unlock failed', err });
+			return false;
+		}
+
+		this.emit('installed');
+
+		logger.startup({
+			msg: 'Dev license unlock enabled (offline, unlimited seats)',
+			modules,
+		});
+
+		return true;
 	}
 
 	public syncShouldPreventActionResults(actions: Record<LicenseLimitKind, boolean>): void {

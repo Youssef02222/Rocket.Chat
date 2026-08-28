@@ -1,6 +1,14 @@
 import { api } from '@rocket.chat/core-services';
 import type { LicenseLimitKind } from '@rocket.chat/core-typings';
-import { applyLicense, applyLicenseOrRemove, applyNewestLicense, License } from '@rocket.chat/license';
+import {
+	applyLicense,
+	applyLicenseOrRemove,
+	applyNewestLicense,
+	DEV_UNLOCK_ENV,
+	isDevUnlockAllowed,
+	License,
+	parseDevUnlockModules,
+} from '@rocket.chat/license';
 import { Subscriptions, Users, Settings, LivechatContacts } from '@rocket.chat/models';
 import { wrapExceptions } from '@rocket.chat/tools';
 import moment from 'moment';
@@ -28,8 +36,10 @@ export const startLicense = async () => {
 	});
 
 	License.onValidateLicense(async () => {
-		(await Settings.updateValueById('Enterprise_License', License.encryptedLicense)).modifiedCount &&
-			void notifyOnSettingChangedById('Enterprise_License');
+		if (!License.isDevUnlock()) {
+			(await Settings.updateValueById('Enterprise_License', License.encryptedLicense)).modifiedCount &&
+				void notifyOnSettingChangedById('Enterprise_License');
+		}
 
 		(await Settings.updateValueById('Enterprise_License_Status', 'Valid')).modifiedCount &&
 			void notifyOnSettingChangedById('Enterprise_License_Status');
@@ -174,6 +184,16 @@ export const startLicense = async () => {
 					[context.limit]: false,
 				} as Record<Partial<LicenseLimitKind>, boolean>);
 			});
+
+			const devUnlockModules = parseDevUnlockModules(process.env[DEV_UNLOCK_ENV]);
+			if (devUnlockModules.length) {
+				if (!isDevUnlockAllowed()) {
+					SystemLogger.error(`${DEV_UNLOCK_ENV} is ignored in production`);
+				} else {
+					await License.applyDevUnlock(devUnlockModules);
+				}
+			}
+
 			resolve();
 		});
 	});
