@@ -1,22 +1,11 @@
-import { registerEEBroker } from './ee/server';
-import { enforceFipsLicense } from './ee/server/lib/license/enforceFipsLicense';
-import { startLicense } from './ee/server/lib/license/startup';
-import { startFederationService as startFederationMatrixService } from './ee/server/startup/federation';
+import { License } from '@rocket.chat/license';
 
-const loadBeforeLicense = async () => {
-	await registerEEBroker();
-};
-
-const loadAfterLicense = async () => {
-	await startFederationMatrixService();
-};
+import { settings } from './server/settings';
 
 export const startRocketChat = async () => {
-	await loadBeforeLicense();
+	await License.setWorkspaceUrl(settings.get<string>('Site_Url') ?? '');
 
-	await startLicense();
-
-	enforceFipsLicense();
-
-	await loadAfterLicense();
+	settings.watch<string>('Site_Url', (value) => {
+		void License.setWorkspaceUrl(value);
+	});
 };

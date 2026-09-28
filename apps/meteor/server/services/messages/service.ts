@@ -6,7 +6,7 @@ import type { MessageUrl, IMessage, MessageTypesValues, IUser, IRoom, AtLeast } 
 import { Messages, Rooms } from '@rocket.chat/models';
 
 import { OEmbed } from './hooks/AfterSaveOEmbed';
-import { BeforeSaveCannedResponse } from '../../../ee/server/hooks/messages/BeforeSaveCannedResponse';
+import { BeforeSaveCannedResponse } from '../../lib/messages/BeforeSaveCannedResponse';
 import { FederationMatrixInvalidConfigurationError } from '../federation/utils';
 import { FederationActions } from './hooks/BeforeFederationActions';
 import { BeforeSaveBadWords } from './hooks/BeforeSaveBadWords';

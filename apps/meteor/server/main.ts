@@ -7,6 +7,7 @@ import './models';
  */
 import './settings/definitions';
 
+import { registerFossAppsOrchestrator } from './apps/fossOrchestrator';
 import { startRestAPI } from './api/api';
 import { configureServer } from './configuration';
 import { SystemLogger } from './lib/logger/system';
@@ -14,12 +15,14 @@ import { registerServices } from './services/startup';
 import { settings } from './settings';
 import { startup } from './startup';
 import { startCronJobs } from './startup/cron';
-import { startupApp } from '../ee/server';
 import { startRocketChat } from '../startRocketChat';
+
+registerFossAppsOrchestrator();
 
 import './routes';
 import './startup/rateLimiter';
 import './startup/robots';
+import './startup/presence';
 import './importPackages';
 import './meteor-methods';
 import './publications';
@@ -37,5 +40,4 @@ setImmediate(() => {
 	});
 });
 
-await startupApp();
 await startRestAPI();

@@ -51,7 +51,7 @@ import { notifyOnUserChangeAsync } from '../lib/notifyListener';
 import { shouldBreakInVersion } from '../lib/shouldBreakInVersion';
 import { authenticationMiddlewareForHono } from './v1/middlewares/authenticationHono';
 import { permissionsMiddleware } from './v1/middlewares/permissions';
-import { license } from '../../ee/server/api/v1/middlewares/license';
+import { license } from './v1/middlewares/license';
 import { getDefaultUserFields } from '../lib/utils/functions/getDefaultUserFields';
 import { settings } from '../settings';
 

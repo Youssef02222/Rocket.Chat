@@ -28,11 +28,14 @@ import { checkOnlineAgents, getOnlineAgents } from './service-status';
 import { getInquirySortMechanismSetting } from './settings';
 import { getOmniChatSortQuery } from '../../../app/livechat/lib/inquiries';
 import { i18n } from '../../../app/utils/lib/i18n';
-import { dispatchInquiryPosition } from '../../../ee/server/lib/omnichannel/Helper';
 import { client, shouldRetryTransaction } from '../../database/utils';
 import { sendNotification } from '../../hooks/messages/sendNotificationsOnMessage';
 import { settings } from '../../settings';
 import { notifyOnLivechatInquiryChangedById, notifyOnLivechatInquiryChanged } from '../notifyListener';
+
+const dispatchInquiryPosition = async (_inquiry: unknown): Promise<void> => {
+	// FOSS: waiting-queue position broadcasts are a premium omnichannel feature.
+};
 
 const logger = new Logger('QueueManager');
 

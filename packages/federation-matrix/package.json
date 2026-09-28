@@ -1,0 +1,23 @@
+{
+	"name": "@rocket.chat/federation-matrix",
+	"version": "0.0.0",
+	"private": true,
+	"license": "MIT",
+	"main": "./dist/index.js",
+	"typings": "./dist/index.d.ts",
+	"files": [
+		"/dist"
+	],
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc --watch --preserveWatchOutput",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@rocket.chat/tsconfig": "workspace:*",
+		"typescript": "~5.9.3"
+	},
+	"volta": {
+		"extends": "../../package.json"
+	}
+}

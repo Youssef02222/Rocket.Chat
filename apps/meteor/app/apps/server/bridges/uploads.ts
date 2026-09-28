@@ -3,7 +3,7 @@ import { UploadBridge } from '@rocket.chat/apps/dist/server/bridges/UploadBridge
 import type { IUpload } from '@rocket.chat/apps-engine/definition/uploads';
 import type { IUploadDetails } from '@rocket.chat/apps-engine/definition/uploads/IUploadDetails';
 
-import { determineFileType } from '../../../../ee/lib/misc/determineFileType';
+import { determineFileType } from '../../../../lib/misc/determineFileType';
 import { FileUpload } from '../../../../server/lib/media/file-upload';
 import { sendFileMessage } from '../../../../server/meteor-methods/messages/sendFileMessage';
 import { sendFileLivechatMessage } from '../../../../server/meteor-methods/omnichannel/sendFileLivechatMessage';
