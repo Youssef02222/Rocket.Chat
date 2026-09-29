@@ -8,7 +8,6 @@ import { LICENSE_VERSION } from './license';
 import { CloudWorkspaceConnectionError } from '../../../lib/errors/CloudWorkspaceConnectionError';
 import { CloudWorkspaceLicenseError } from '../../../lib/errors/CloudWorkspaceLicenseError';
 import { settings } from '../../settings';
-import { callbacks } from '../callbacks';
 import { SystemLogger } from '../logger/system';
 
 const fetchCloudWorkspaceLicensePayload = async ({ token }: { token: string }): Promise<Cloud.WorkspaceLicensePayload> => {
@@ -65,9 +64,8 @@ export async function getWorkspaceLicense() {
 		if (currentLicense.value && payload.updatedAt.getTime() <= currentLicense._updatedAt.getTime()) {
 			return;
 		}
-		await callbacks.run('workspaceLicenseChanged', payload.license);
 
-		return { updated: true, license: payload.license };
+		return { updated: false, license: payload.license };
 	} catch (err) {
 		SystemLogger.error({
 			msg: 'Failed to update license from Rocket.Chat Cloud',

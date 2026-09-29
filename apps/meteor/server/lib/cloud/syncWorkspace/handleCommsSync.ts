@@ -1,4 +1,4 @@
-import { NPS, Banner } from '@rocket.chat/core-services';
+import { NPS } from '@rocket.chat/core-services';
 import type { Cloud, IBanner, Optional } from '@rocket.chat/core-typings';
 
 import { getAndCreateNpsSurvey } from '../../../services/nps/getAndCreateNpsSurvey';
@@ -23,34 +23,13 @@ export const handleNpsOnWorkspaceSync = async (nps: Cloud.NpsSurveyAnnouncement)
 	}
 };
 
-export const handleBannerOnWorkspaceSync = async (banners: Optional<IBanner, '_updatedAt'>[]) => {
-	for (const banner of banners) {
-		await Banner.create(banner);
-	}
+export const handleBannerOnWorkspaceSync = async (_banners: Optional<IBanner, '_updatedAt'>[]) => {
+	// FOSS: do not persist commercial Cloud banners (Starter plan / upsell dialogs).
 };
 
-export const handleAnnouncementsOnWorkspaceSync = async (announcements: {
+export const handleAnnouncementsOnWorkspaceSync = async (_announcements: {
 	create: Cloud.Announcement[];
 	delete?: Cloud.Announcement['_id'][];
 }) => {
-	const { create, delete: deleteIds } = announcements;
-
-	if (deleteIds) {
-		await Promise.all(deleteIds.map((announcementId) => Banner.disable(announcementId)));
-	}
-
-	await Promise.all(
-		create.map((announcement) => {
-			const { view, selector } = announcement;
-
-			return Banner.create({
-				...announcement,
-				...(selector?.roles ? { roles: selector.roles } : {}),
-				view: {
-					...view,
-					appId: 'cloud-announcements-core',
-				},
-			});
-		}),
-	);
+	// FOSS: do not persist commercial Cloud announcements.
 };

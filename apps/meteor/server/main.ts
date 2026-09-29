@@ -7,7 +7,7 @@ import './models';
  */
 import './settings/definitions';
 
-import { registerFossAppsOrchestrator } from './apps/fossOrchestrator';
+import { registerAppsOrchestrator } from './apps/orchestrator';
 import { startRestAPI } from './api/api';
 import { configureServer } from './configuration';
 import { SystemLogger } from './lib/logger/system';
@@ -17,7 +17,7 @@ import { startup } from './startup';
 import { startCronJobs } from './startup/cron';
 import { startRocketChat } from '../startRocketChat';
 
-registerFossAppsOrchestrator();
+registerAppsOrchestrator();
 
 import './routes';
 import './startup/rateLimiter';

@@ -24,21 +24,15 @@ export async function syncCloudData() {
 
 		const workspaceRegistrationData = await buildWorkspaceRegistrationData(undefined);
 
-		const {
-			license,
-			removeLicense = false,
-			cloudSyncAnnouncement,
-		} = await fetchWorkspaceSyncPayload({
+		const { removeLicense = false } = await fetchWorkspaceSyncPayload({
 			token,
 			data: workspaceRegistrationData,
 		});
 
-		await Settings.updateValueById('Cloud_Sync_Announcement_Payload', JSON.stringify(cloudSyncAnnouncement ?? null));
+		await Settings.updateValueById('Cloud_Sync_Announcement_Payload', 'null');
 
 		if (removeLicense) {
 			await callbacks.run('workspaceLicenseRemoved');
-		} else {
-			await callbacks.run('workspaceLicenseChanged', license);
 		}
 
 		SystemLogger.info({

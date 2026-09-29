@@ -31,7 +31,7 @@ describe('SyncCloudData', () => {
 		mockedFetchWorkspaceSyncPayload.reset();
 	});
 
-	it('should save cloudSyncAnnouncement payload on Cloud_Sync_Announcement_Payload setting when present', async () => {
+	it('should discard Cloud commercial announcements on FOSS workspaces', async () => {
 		const workspaceSyncPayloadResponse = {
 			workspaceId: 'workspaceId',
 			publicKey: 'publicKey',
@@ -72,12 +72,7 @@ describe('SyncCloudData', () => {
 
 		expect(mockedFetchWorkspaceSyncPayload.calledOnce).to.be.true;
 
-		expect(
-			models.Settings.updateValueById.calledOnceWith(
-				'Cloud_Sync_Announcement_Payload',
-				JSON.stringify(workspaceSyncPayloadResponse.cloudSyncAnnouncement),
-			),
-		).to.be.true;
+		expect(models.Settings.updateValueById.calledOnceWith('Cloud_Sync_Announcement_Payload', 'null')).to.be.true;
 	});
 
 	it("Should save as 'null' the setting update if cloudSyncAnnouncement is not present", async () => {

@@ -13,7 +13,7 @@ const CloudAnnouncementsRegion = () => {
 	const { isSuccess, data: announcements } = useQuery({
 		queryKey: ['cloud', 'announcements'],
 		queryFn: () => getAnnouncements({ platform: BannerPlatform.Web }),
-		select: (data) => data.banners,
+		select: (data) => data.banners.filter((banner) => banner.view?.appId !== 'cloud-announcements-core' && banner.surface !== 'modal'),
 		enabled: !!uid,
 		staleTime: 0,
 		refetchInterval: 1000 * 60 * 60 * 24,

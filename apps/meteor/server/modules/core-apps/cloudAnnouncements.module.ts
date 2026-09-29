@@ -72,15 +72,11 @@ export class CloudAnnouncementsModule implements IUiKitCoreApp {
 		const bannerIds = [viewId, id].filter((bannerId) => isTruthy(bannerId));
 		const banners = await Banners.findByIds(bannerIds).toArray();
 		const announcement = banners.find((b) => b._id === viewId) || banners.find((b) => b._id === id);
-		if (!announcement) {
-			throw new Error('Banner not found');
+		if (announcement) {
+			await Banner.dismiss(userId, announcement._id);
 		}
 
-		await Banner.dismiss(userId, announcement._id);
-
-		const type = announcement.surface === 'banner' ? 'banner.close' : 'modal.close';
-
-		// for viewClosed we just need to let Cloud know that the banner was closed, no need to wait for the response
+		const type = announcement?.surface === 'banner' ? 'banner.close' : 'modal.close';
 
 		void this.handlePayload(payload);
 
@@ -88,7 +84,7 @@ export class CloudAnnouncementsModule implements IUiKitCoreApp {
 			type,
 			triggerId: payload.triggerId,
 			appId: payload.appId,
-			viewId: announcement._id,
+			viewId: announcement?._id ?? viewId ?? id ?? '',
 		};
 	}
 

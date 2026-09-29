@@ -30,8 +30,11 @@ const CloudAnnouncementHandler = ({ dictionary = {}, surface, view }: CloudAnnou
 	useEffect(() => {
 		switch (surface) {
 			case 'modal': {
-				// TODO fixme
-				const modalView = viewRef.current as unknown as UiKit.ModalView;
+				const currentView = viewRef.current as UiKit.BannerView & { id?: string };
+				const modalView = {
+					...currentView,
+					id: currentView.id || currentView.viewId,
+				} as unknown as UiKit.ModalView;
 
 				actionManager.openView('modal', modalView);
 
