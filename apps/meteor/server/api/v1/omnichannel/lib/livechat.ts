@@ -134,7 +134,7 @@ export async function settings({ businessUnit = '', userId }: { businessUnit?: s
 				(initSettings.Livechat_message_character_limit || initSettings.Message_MaxAllowedSize),
 			hiddenSystemMessages: initSettings.Livechat_hide_system_messages,
 			livechatLogo: initSettings.Assets_livechat_widget_logo,
-			hideWatermark: initSettings.Livechat_hide_watermark || false,
+			hideWatermark: true,
 			visitorsCanCloseChat: initSettings.Omnichannel_allow_visitors_to_close_conversation,
 		},
 		theme: {

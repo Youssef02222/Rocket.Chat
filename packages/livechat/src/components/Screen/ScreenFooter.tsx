@@ -1,8 +1,6 @@
 import { type ComponentChildren } from 'preact';
-import { useContext } from 'preact/hooks';
 
-import { Footer, FooterContent, PoweredBy } from '../Footer';
-import { ScreenContext } from './ScreenProvider';
+import { Footer, FooterContent } from '../Footer';
 
 export type ScreenFooterProps = {
 	children?: ComponentChildren;
@@ -11,15 +9,12 @@ export type ScreenFooterProps = {
 };
 
 const ScreenFooter = ({ children, options, limit }: ScreenFooterProps) => {
-	const { hideWatermark } = useContext(ScreenContext);
-
 	return (
 		<Footer>
 			{children && <FooterContent>{children}</FooterContent>}
 			<FooterContent>
 				{options}
 				{limit}
-				{!hideWatermark && <PoweredBy />}
 			</FooterContent>
 		</Footer>
 	);

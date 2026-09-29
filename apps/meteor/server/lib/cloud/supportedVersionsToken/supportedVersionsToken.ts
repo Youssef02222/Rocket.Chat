@@ -1,9 +1,7 @@
 import type { SettingValue } from '@rocket.chat/core-typings';
 import { License } from '@rocket.chat/license';
 import { Settings } from '@rocket.chat/models';
-import type { SignedSupportedVersions, SupportedVersions } from '@rocket.chat/server-cloud-communication';
-import type { Response } from '@rocket.chat/server-fetch';
-import { serverFetch as fetch } from '@rocket.chat/server-fetch';
+import type { SignedSupportedVersions } from '@rocket.chat/server-cloud-communication';
 
 import { supportedVersionsChooseLatest } from './supportedVersionsChooseLatest';
 import { supportedVersions as supportedVersionsFromBuild } from '../../../../app/utils/rocketchat-supported-versions.info';
@@ -11,7 +9,6 @@ import { settings } from '../../../settings';
 import { updateAuditedBySystem } from '../../../settings/lib/auditedSettingUpdates';
 import { SystemLogger } from '../../logger/system';
 import { notifyOnSettingChangedById } from '../../notifyListener';
-import { generateWorkspaceBearerHttpHeader } from '../getWorkspaceAccessToken';
 import { buildVersionUpdateMessage } from '../version-check/functions/buildVersionUpdateMessage';
 
 declare module '@rocket.chat/core-typings' {
@@ -40,22 +37,6 @@ export const wrapPromise = <T>(
 			success: false,
 			error,
 		}));
-
-export const handleResponse = async <T>(promise: Promise<Response>) => {
-	return wrapPromise<T>(
-		(async () => {
-			const request = await promise;
-			if (!request.ok) {
-				if (request.size > 0) {
-					throw new Error((await request.json()).error);
-				}
-				throw new Error(request.statusText);
-			}
-
-			return request.json();
-		})(),
-	);
-};
 
 const cacheValueInSettings = <T extends SettingValue>(
 	key: string,
@@ -99,10 +80,6 @@ const cacheValueInSettings = <T extends SettingValue>(
 	);
 };
 
-const releaseEndpoint = process.env.OVERWRITE_INTERNAL_RELEASE_URL?.trim()
-	? process.env.OVERWRITE_INTERNAL_RELEASE_URL.trim()
-	: 'https://releases.rocket.chat/v2/server/supportedVersions';
-
 const getSupportedVersionsFromCloud = async () => {
 	if (process.env.CLOUD_SUPPORTED_VERSIONS_TOKEN) {
 		return {
@@ -112,45 +89,20 @@ const getSupportedVersionsFromCloud = async () => {
 		};
 	}
 
-	const headers = await generateWorkspaceBearerHttpHeader();
-
-	// Re-validated at dispatch time: an offline license applied while this async
-	// operation was in flight must still suppress the request.
-	if (License.hasOfflineLicense()) {
-		return { success: true, result: undefined } as const;
-	}
-
-	const response = await handleResponse<SupportedVersions>(
-		fetch(releaseEndpoint, {
-			headers,
-			timeout: 5000,
-			// SECURITY: the URL is a default hardcoded value or an envvar set by an admin. It's safe to disable this check.
-			ignoreSsrfValidation: true,
-		}),
-	);
-
-	if (!response.success) {
-		SystemLogger.error({
-			msg: 'Failed to communicate with Rocket.Chat Cloud',
-			url: releaseEndpoint,
-			err: response.error,
-		});
-	}
-
-	return response;
+	// FOSS: do not phone home to releases.rocket.chat. The 5s timeout aborts the
+	// request and retries five times, which only spams logs. Use the versions
+	// bundled in the build instead.
+	return { success: true, result: undefined } as const;
 };
 
-const getSupportedVersionsToken = async (retry = 0) => {
+const getSupportedVersionsToken = async () => {
 	/**
 	 * Gets the supported versions from the license
 	 * Gets the supported versions from the cloud
 	 * Gets the latest version
 	 * return the token
 	 */
-	const [versionsFromLicense, cloudResponse] = await Promise.all([
-		License.getLicense(),
-		License.hasOfflineLicense() ? ({ success: true, result: undefined } as const) : getSupportedVersionsFromCloud(),
-	]);
+	const [versionsFromLicense, cloudResponse] = await Promise.all([License.getLicense(), getSupportedVersionsFromCloud()]);
 
 	const supportedVersions = await supportedVersionsChooseLatest(
 		supportedVersionsFromBuild,
@@ -183,22 +135,7 @@ const getSupportedVersionsToken = async (retry = 0) => {
 			break;
 	}
 
-	// to avoid a possibly wrong message, we only send the message if the cloud response was successful
 	if (cloudResponse.success) {
-		await buildVersionUpdateMessage(supportedVersions?.versions);
-	} else if (retry < 5) {
-		// in case of failure we'll try again later
-		setTimeout(
-			async () => {
-				await getCachedSupportedVersionsToken.reset(retry + 1);
-			},
-			5000 * Math.pow(2, retry),
-		);
-	} else {
-		SystemLogger.error({
-			msg: 'Failed to get supported versions from cloud after retries.',
-			retry,
-		});
 		await buildVersionUpdateMessage(supportedVersions?.versions);
 	}
 
